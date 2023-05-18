@@ -33,12 +33,19 @@ newkeycodes = [
     "Keycode.D,",
     "Keycode.D"
 ]
+keynames = [["A", "A", "A", "A"],
+            ["A", "A", "A", "A"],
+            ["A", "A", "A", "A"],
+            ["B", "E", "I", "Z"]]
 
 class MyButton:
     h = 3
     w = 6
+    keyname = ""
     def __init__(self, master, c, r, c_sp, r_sp):
         self.button = tkinter.Button(master, height=self.h, width=self.w)
+        self.keyname = keynames[r][c]
+        self.button.config(text=keynames[r][c])
         self.button.grid(column=c, row=r, columnspan=c_sp, rowspan=r_sp, padx=2, pady=2)
 
 def askDir(codepath, mystring):
@@ -99,7 +106,8 @@ def main():
     for i in range(4):
         newrow = []
         for j in range (4):
-            newrow.append(MyButton(frame2,i,j,1,1))
+            btn = MyButton(frame2,j,i,1,1)
+            newrow.append(btn)
         buttons.append(newrow)    
 
     frame2.pack()
