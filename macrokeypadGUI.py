@@ -15,38 +15,79 @@ from functools import partial
 from tkinter import filedialog
 import os
 
-newkeycodes = [
-    "Keycode.A,",
-    "Keycode.A,",
-    "Keycode.A,",
-    "Keycode.A,",
-    "Keycode.B,",
-    "Keycode.B,",
-    "Keycode.B,",
-    "Keycode.B,",
-    "Keycode.C,",
-    "Keycode.C,",
-    "Keycode.C,",
-    "Keycode.C,",
-    "Keycode.D,",
-    "Keycode.D,",
-    "Keycode.D,",
-    "Keycode.D"
-]
-keynames = [["A", "A", "A", "A"],
-            ["A", "A", "A", "A"],
-            ["A", "A", "A", "A"],
-            ["B", "E", "I", "Z"]]
+keynames = []
+options = []
+buttons = []
 
 class MyButton:
     h = 3
     w = 6
     keyname = ""
     def __init__(self, master, c, r, c_sp, r_sp):
-        self.button = tkinter.Button(master, height=self.h, width=self.w)
+        self.button = tkinter.Button(master, height=self.h, width=self.w, command=partial(openPopup, master, r, c))
         self.keyname = keynames[r][c]
         self.button.config(text=keynames[r][c])
         self.button.grid(column=c, row=r, columnspan=c_sp, rowspan=r_sp, padx=2, pady=2)
+    
+def saveKey(r, c, entry):
+    keynames[r][c] = entry
+    print(keynames[r][c], entry)
+    
+    newkeynamesfile = open(os.getcwd()+"\keynames.txt", 'w')
+    for h in range(4):
+        for j in range(4):
+            newkeynamesfile.write(keynames[h][j] + "\n")
+            buttons[h][j].button.config(text=keynames[h][j])
+    
+    newkeynamesfile.close()
+
+    
+def openPopup(master, r, c):
+    child = tkinter.Toplevel(master)
+    child.title("Button config")
+    child.geometry("1000x400")
+
+    counter = 0
+    col = 0
+    row = 0
+    for o in range(len(options)):
+        newbutton = tkinter.Button(child, text=options[o], width=20, command=partial(saveKey, r, c, options[o]))
+        newbutton.grid(column=col, row=row, sticky="W")
+        if counter > 9:
+            counter = 0
+            col = col + 1
+        else:
+            counter = counter + 1
+        if row > 9:
+            row = 0
+        else:
+            row = row + 1
+    
+def setup():
+    keynamesfile = open(os.getcwd()+"\keynames.txt", 'r')
+    optionsfile = open(os.getcwd()+"\options.txt", 'r')
+
+    lines = keynamesfile.readlines()
+    k = 0
+    for i in range(4):
+        temp = []
+        for j in range(4):
+            if (lines[k].find('\n') != -1): #delete newlines
+                temp.append(lines[k][:-1])
+            else:
+                temp.append(lines[k])
+            k = k + 1
+        keynames.append(temp)
+    
+    lines = optionsfile.readlines()
+    for line in lines:
+        if line.find('\n') != -1:
+            options.append(line[:-1])
+        else:
+            options.append(line)
+
+    keynamesfile.close()
+    optionsfile.close()
 
 def askDir(codepath, mystring):
     '''
@@ -76,10 +117,13 @@ def findInCode(keyword, mystring):
                 print(i)
                 k = k + 1
                 newfile.write(lines[i + k])
-                for j in range(len(newkeycodes)):
-                    print(i+k)
-                    newfile.write(newkeycodes[j] + "\n")
-                    k = k + 1
+                for h in range(4):
+                    j = 3
+                    while j >= 0: #iterate in reverse order to get the keys at the right position
+                        print(i+k)
+                        newfile.write("Keycode."+keynames[j][h] + ", \n")
+                        k = k + 1
+                        j = j - 1
                 #newfile.write("] \n")
                 #i=i+1            
             else:
@@ -92,6 +136,7 @@ def findInCode(keyword, mystring):
     os.rename(filepath[:-7]+"newcode.py", filepath)
 
 def main():
+    setup()
     window = tkinter.Tk()
     window.title("Macro Keypad")
     window.geometry('400x400')
@@ -102,7 +147,6 @@ def main():
 
     frame2 = tkinter.Frame(window)
     # Create a 4x4 grid of squares representing the buttons of the keypad
-    buttons = []
     for i in range(4):
         newrow = []
         for j in range (4):
