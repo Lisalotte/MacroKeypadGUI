@@ -22,13 +22,36 @@ buttons = []
 class MyButton:
     h = 3
     w = 6
+    r = 0
+    c = 0
     keyname = ""
     def __init__(self, master, c, r, c_sp, r_sp):
-        self.button = tkinter.Button(master, height=self.h, width=self.w, command=partial(openPopup, master, r, c))
+        self.button = tkinter.Button(master, height=self.h, width=self.w)#, command=partial(openPopup, master, r, c))
+        self.button.bind('<Button-1>', self.set_key)
         self.keyname = keynames[r][c]
         self.button.config(text=keynames[r][c])
         self.button.grid(column=c, row=r, columnspan=c_sp, rowspan=r_sp, padx=2, pady=2)
+        self.r = r
+        self.c = c
     
+    def set_key(self, event):
+        self.button["text"] = "Press a Key..."
+        self.button.bind('<Key>', self.save_key)
+        self.button.focus_set()
+
+    def save_key(self, event):
+        key = event.keysym
+        self.button.config(text=key)
+        saveKey(self.r, self.c, key)
+        self.button.unbind('<Key>')
+        self.button.unbind('<Button-1>')
+        self.button.bind('<Button-1>', self.clear_key)
+
+    def clear_key(self, event):
+        self.button["text"] = "Click to Set"
+        self.button.unbind('<Button-1>')
+        self.button.bind('<Button-1>', self.set_key)
+
 def saveKey(r, c, entry):
     keynames[r][c] = entry
     print(keynames[r][c], entry)
@@ -41,7 +64,8 @@ def saveKey(r, c, entry):
     
     newkeynamesfile.close()
 
-    
+'''
+# Choose key from list
 def openPopup(master, r, c):
     child = tkinter.Toplevel(master)
     child.title("Button config")
@@ -53,16 +77,17 @@ def openPopup(master, r, c):
     for o in range(len(options)):
         newbutton = tkinter.Button(child, text=options[o], width=20, command=partial(saveKey, r, c, options[o]))
         newbutton.grid(column=col, row=row, sticky="W")
-        if counter > 9:
+        if counter > 17:
             counter = 0
             col = col + 1
         else:
             counter = counter + 1
-        if row > 9:
+        if row > 17:
             row = 0
         else:
             row = row + 1
-    
+'''
+
 def setup():
     keynamesfile = open(os.getcwd()+"\keynames.txt", 'r')
     optionsfile = open(os.getcwd()+"\options.txt", 'r')
