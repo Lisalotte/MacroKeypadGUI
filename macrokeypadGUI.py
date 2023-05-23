@@ -25,8 +25,11 @@ class MyButton:
     r = 0
     c = 0
     keyname = ""
+    pressed_keys = []
+
     def __init__(self, master, c, r, c_sp, r_sp):
         self.button = tkinter.Button(master, height=self.h, width=self.w)#, command=partial(openPopup, master, r, c))
+        self.master = master
         self.button.bind('<Button-1>', self.set_key)
         self.keyname = keynames[r][c]
         self.button.config(text=keynames[r][c])
@@ -34,26 +37,46 @@ class MyButton:
         self.r = r
         self.c = c
     
-    def set_key(self, event):
-        self.button["text"] = "Press a Key..."
-        self.button.bind('<Key>', self.save_key)
-        self.button.focus_set()
-
-    def save_key(self, event):
+    def key_press(self, labelvar, event):
         key = event.keysym
-        self.button.config(text=key)
-        saveKey(self.r, self.c, key)
-        self.button.unbind('<Key>')
-        self.button.unbind('<Button-1>')
-        self.button.bind('<Button-1>', self.clear_key)
+        self.pressed_keys.append(key)
+        string = ""
+        for key in self.pressed_keys:
+            string = string + key
+        labelvar.set(string)
 
-    def clear_key(self, event):
-        self.button["text"] = "Click to Set"
-        self.button.unbind('<Button-1>')
-        self.button.bind('<Button-1>', self.set_key)
+    def key_release(self, labelvar):
+        self.pressed_keys = []
+        labelvar.set("")
+
+    def set_key(self, event):
+        popup = tkinter.Toplevel(self.master)
+        popup.title("Button config")
+        popup.geometry("200x400")
+
+        labelvar = tkinter.StringVar()
+        labelvar.set("Press a Key")
+        label = tkinter.Label(popup, textvariable=labelvar)
+        label.grid(row=0,column=0)
+
+        #self.button["text"] = "Press a Key..."
+        popup.focus_set()
+        popup.bind("<Key>", partial(self.key_press, labelvar)) #partial(self.save_key, popup, labelvar))
+
+        set = tkinter.Button(popup, text = "Set", command=partial(self.save_key, popup, labelvar))
+        set.grid(row=1,column=0)
+        clear = tkinter.Button(popup, text = "Clear", command=partial(self.key_release, labelvar))
+        clear.grid(row=2,column=0)
+
+    def save_key(self, popup, labelvar):
+        string = ""
+        for key in self.pressed_keys:
+            string = string + key
+        labelvar.set(string)
+        saveKey(self.r, self.c, self.pressed_keys)
 
 def saveKey(r, c, entry):
-    keynames[r][c] = entry
+    keynames[r][c] = entry[0] #TODO
     print(keynames[r][c], entry)
     
     newkeynamesfile = open(os.getcwd()+"\keynames.txt", 'w')
